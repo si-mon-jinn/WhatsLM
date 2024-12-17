@@ -7,6 +7,7 @@ from .models import FFWD
 from .models import FFWD_BOW
 from .models import FFWD_BOW_V
 from .models import FFWD_BOW_VQK
+from .models import MHA
 
 
 
@@ -150,6 +151,14 @@ class Model():
             head_size = self.params["model_handler"]['head_size']
             
             self.model = FFWD_BOW_VQK.FFWD_VQK(vocab_size, embed_size, head_size, block_size=self.block_size).to(self.device)
+
+        elif model_name == 'MHA':
+            vocab_size = self.vocab_size
+            embed_size = self.params["model_handler"]['embed_size']
+            head_size = self.params["model_handler"]['head_size']
+            num_heads = self.params["model_handler"]['num_heads']
+            
+            self.model = MHA.MHA(vocab_size, embed_size, num_heads, head_size, block_size=self.block_size).to(self.device)
             
         # elif model_name == "GPT":
         #     vocab_size = self.vocab_size
