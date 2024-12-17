@@ -3,7 +3,7 @@ import torch
 
 description = \
 """
-WhatsGPT is the goal, 
+What's LM? Let's find out. 
 """
 
 parser = argparse.ArgumentParser(description=description)
