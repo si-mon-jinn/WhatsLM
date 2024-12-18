@@ -104,14 +104,14 @@ if _train:
 
     if _gen:
         if _verbose: print('\n>>> Status and generation...')
-        model.status() # Terrible, should return a data structure like a dict
+        print(model.get_status())
         print(model.generate("sucare", _gen_toks))
 
     model.train_model(_training_steps, trainer)
 
 if _gen:
     if _verbose: print('\n>>> Status and generation...')
-    model.status()
+    print(model.get_status())
     print(model.generate("sucare", _gen_toks))
 
 if _plot:

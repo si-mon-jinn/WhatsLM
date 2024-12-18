@@ -101,6 +101,10 @@ class Model():
         self.model_loss = []
         self.model_vloss = []
 
+        self.status = {}
+
+        self.status['Number of parameters'] = None
+
         ######## Checking if I already have info about vocab_size and block_size. 
         # ATM they are info coming from tokenizer and dealer, before the model is created,
         # thus I am not sure their more logical place is in the model parameters...
@@ -180,13 +184,18 @@ class Model():
         else:
             print(f'{self.params["model_name"]} is not known')
 
+        self.status['Number of parameters'] = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+
     def train_model(self, steps: int, trainer):
         trainer.train(steps)
     
-    def status(self):
-        print(f'Number of steps: {self.curr_steps}')
-        print(f'Training loss: {self.model_loss[-1] if len(self.model_loss)>0 else None}')
-        print(f'Validation loss: {self.model_vloss[-1] if len(self.model_vloss)>0 else None}')
+    def get_status(self):
+        self.status['Number of steps'] = self.curr_steps
+        self.status['Training loss'] = self.model_loss[-1] if len(self.model_loss)>0 else None
+        self.status['Validation loss'] = self.model_vloss[-1] if len(self.model_vloss)>0 else None
+
+        return self.status
+
 
     def generate(self, prompt: str, tokens: int) -> str:
         return self.tokenizer.decode(self.model.generate(self.tokenizer.encode(prompt).unsqueeze(0).to(self.device), tokens).squeeze())
