@@ -1,3 +1,4 @@
+import sys
 import argparse
 import torch
 
@@ -12,7 +13,7 @@ parser.add_argument("-t", "--train", type=int, help="number of training steps to
 parser.add_argument("-g", "--generate", type=int, help="number tokens to generate")
 parser.add_argument("-v", "--verbose", action="store_true", help="random prints on what's going on", default=False)
 parser.add_argument("-d", "--device", type=str, help="device to train and generate on")
-parser.add_argument("-p", "--plot", type=str, help="plot train and validation loss", nargs='?', default='')
+parser.add_argument("-p", "--plot", action="store_true", help="plot train and validation loss")#, nargs='?', default='')
 
 
 args = parser.parse_args()
@@ -35,7 +36,7 @@ if args.generate is not None:
 
 if args.plot is not None:
     _plot = True
-    _snaplot = args.plot
+    #_snaplot = args.plot
 
 
 _verbose = True if args.verbose else False
@@ -52,7 +53,8 @@ device = 'cuda'
 if args.device is not None:
     if args.device.startswith('cuda'):
         device = args.device.split(":")[0]
-        if len(args.device.split(":"))>1: torch.set_num_threads(int(args.device.split(':')[1]))
+        if len(args.device.split(":"))>1 and args.device.split(":")[1] != '': device+':'+args.device.split(":")[1]
+        if len(args.device.split(":"))>2 and args.device.split(":")[2] != '': torch.set_num_threads(int(args.device.split(':')[2]))
     elif args.device.startswith('cpu'):
         device = 'cpu'
         if len(args.device.split(":"))>1: torch.set_num_threads(int(args.device.split(':')[1]))
@@ -115,18 +117,20 @@ if _gen:
 if _plot:
     from matplotlib import pyplot as plt
 
-    if _snaplot == '' and (_train or _gen):
+    if _train or _gen:
         print('model')
-        loss = model.model_loss[20:]
-        vloss = model.model_vloss[20:]
+        loss = model.model_loss[:]
+        vloss = model.model_vloss[:]
 
     else:
-        print('pickle')
+        print('pickle, temporary not supported')
+        sys.exit()
+
         import pickle
 
         model = pickle.load(open(_snaplot, 'rb'))
-        loss = model.model_loss[20:]
-        vloss = model.model_vloss[20:]
+        loss = model.model_loss[:]
+        vloss = model.model_vloss[:]
 
     fig, ax = plt.subplots()
 
