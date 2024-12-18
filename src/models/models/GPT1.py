@@ -33,7 +33,7 @@ class FeedForward(nn.Module):
     def __init__(self, embed_size:int, gelu_size:int, dropout:float):
         super().__init__()
 
-        self.layernorm = LayerNorm()
+        self.layernorm = LayerNorm(embed_size=embed_size)
 
         self.linearpre = nn.Linear(embed_size, gelu_size)
         self.gelu = nn.GELU()
@@ -57,7 +57,7 @@ class TransformerBlock(nn.Module):
     def __init__(self, embed_size:int, num_heads:int, head_size:int, block_size:int, dropout:float):
         super().__init__()
 
-        self.layernorm_preheads = LayerNorm()
+        self.layernorm_preheads = LayerNorm(embed_size=embed_size)
         
         #self.linear_preheads = nn.Linear()
         self.multi_head = MultiHeadAttention(num_heads=num_heads, head_size=head_size, block_size=block_size, dropout=dropout)
@@ -80,11 +80,22 @@ class TransformerBlock(nn.Module):
         return out_toks
 
 class LayerNorm(nn.Module):
-    def __init__(self):
+    def __init__(self, embed_size:int, eps=1e-5):
         super().__init__()
+
+        self.register_buffer('eps', torch.Tensor([eps]))
+
+        self.gamma = nn.Parameter(torch.ones((embed_size,)))
+        self.beta = nn.Parameter(torch.zeros((embed_size,)))
     
-    def forward(self, toks):
-        return toks
+    def forward(self, toks): # B, T, C
+        # Put on a gaussian centered in zero along the channels?
+        mean = toks.mean(dim=-1, keepdim=True) # (B, T, 1)
+        sigm = torch.sqrt(((toks-mean)**2).mean(dim=-1, keepdim=True)+self.eps) # (B, T, C) - (B, T, 1)
+
+        out_toks = (toks-mean)/sigm*self.gamma+self.beta     
+
+        return out_toks
 
 
 
@@ -101,7 +112,7 @@ class GPT1(nn.Module):
 
         self.blocks = nn.Sequential(*[TransformerBlock(embed_size=embed_size, num_heads=num_heads, head_size=head_size, block_size=self.block_size, dropout=dropout) for _ in range(num_blocks)])
 
-        self.layernorm = LayerNorm()
+        self.layernorm = LayerNorm(embed_size=embed_size)
 
         self.out_layer = nn.Linear(embed_size, vocab_size)
 
