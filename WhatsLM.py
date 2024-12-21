@@ -36,9 +36,9 @@ if args.generate is not None:
 
 if args.plot is not None:
     _plot = True
-    #_snaplot = args.plot
+    _snaplot = args.plot
 
-
+_plot = args.plot
 _verbose = True if args.verbose else False
 
 '''
@@ -59,6 +59,7 @@ if args.device is not None:
         device = 'cpu'
         if len(args.device.split(":"))>1: torch.set_num_threads(int(args.device.split(':')[1]))
 
+if _verbose: print(f'>>> Running on device: {device} with {torch.get_num_threads()} CPU threads')
 
 
 if _train or _gen:
