@@ -3,6 +3,7 @@
 
 import torch
 import json
+from datetime import datetime
 
 from ..models.model_base import ModelLoader
 from ..data.dealing import DataDealer
@@ -33,6 +34,8 @@ class ModelTrainer():
     
     def train(self, steps: int, batch_size: int = 0):
         if batch_size == 0: batch_size = self.batch_size
+
+        time1 = datetime.now()            
         for step in range(steps):
             xb, yb = self.get_batch(split='train', 
                                     batch_size=batch_size, 
@@ -51,7 +54,11 @@ class ModelTrainer():
                 mloss = self.get_loss(self.module, split = 'train', batch_size=10).item()
                 mvloss = self.get_loss(self.module, split = 'valid', batch_size=10).item()
 
-                print(f'{step+1}: {mloss:.4f} {mvloss:.4f}')
+                time2 = datetime.now()
+                number_of_tokens = self.log_freq*self.batch_size*self.block_size
+                tokes_per_second = number_of_tokens/(time2-time1).total_seconds()
+                print(f'step {step+1}: loss {mloss:.4f} vloss {mvloss:.4f} Gtoks/s {tokes_per_second/1e6:.3f}')
+                time1 = time2
             
             if (step+1) % self.snap_freq == 0:
                 self.model.model_loss += [self.get_loss(self.module, split = 'train', batch_size=1000).item()] #model_loss
