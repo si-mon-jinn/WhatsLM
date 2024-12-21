@@ -34,9 +34,11 @@ class MultiHeadAttention(nn.Module):
 
 
         self.heads = nn.ModuleList([AttentionHead(head_size=self.head_size, block_size=block_size, dropout=dropout) for _ in range(num_heads)])
+        self.linear = nn.Linear(num_heads*head_size, num_heads*head_size)
     
     def forward(self, toks): # toks: (B, T, C)
         # Not sure this is the best way of doing it
         out_toks = torch.concat([head(toks[:,:,n*self.head_size:(n+1)*self.head_size]) for n, head in enumerate(self.heads)], dim=-1)
+        out_toks = self.linear(out_toks)
 
         return out_toks

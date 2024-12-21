@@ -43,13 +43,11 @@ class FeedForward(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, toks):
-        toks = self.layernorm(toks)
+        #toks = self.layernorm(toks)
 
         out_toks = self.linearpre(toks)
         out_toks = self.gelu(out_toks)
         out_toks = self.linearpost(out_toks)
-
-        out_toks = toks + self.dropout(out_toks)
 
         return out_toks
 
@@ -57,25 +55,21 @@ class TransformerBlock(nn.Module):
     def __init__(self, embed_size:int, num_heads:int, head_size:int, block_size:int, dropout:float):
         super().__init__()
 
-        self.layernorm_preheads = LayerNorm(embed_size=embed_size)
-        
-        #self.linear_preheads = nn.Linear()
+        self.layernorm_preheads = LayerNorm(embed_size=embed_size)       
         self.multi_head = MultiHeadAttention(num_heads=num_heads, head_size=head_size, block_size=block_size, dropout=dropout)
-        self.linear_postheads = nn.Linear(num_heads*head_size, embed_size)
         self.dropout_postheads = nn.Dropout(dropout)
 
-        self.ffwd = FeedForward(embed_size=embed_size, gelu_size=embed_size, dropout=dropout) # FIXME gelu_size should be set explicitely
-
+        self.layernorm_preffwd = LayerNorm(embed_size=embed_size)
+        self.ffwd = FeedForward(embed_size=embed_size, gelu_size=embed_size*4, dropout=dropout) # FIXME gelu_size should be set explicitely
+        self.dropout_postffwd = nn.Dropout(dropout)
 
     def forward(self, toks):
 
         out_toks = self.layernorm_preheads(toks)
-        #out_toks = self.linear_preheads(out_toks)
-        out_toks = self.multi_head(out_toks)
-        out_toks = self.linear_postheads(out_toks)
-        out_toks = toks + self.dropout_postheads(out_toks)
+        out_toks = toks + self.dropout_postheads(self.multi_head(out_toks))
 
-        out_toks = self.ffwd(out_toks)
+        out_toks = self.layernorm_preffwd(out_toks)
+        out_toks = out_toks + self.dropout_postffwd(self.ffwd(out_toks))
 
         return out_toks
 
